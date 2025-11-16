@@ -1,10 +1,10 @@
 name: All
 
 on:
-  push:              
+  push:
   schedule:
     - cron: '0 */1 * * *'  # 每1小时运行一次
-  workflow_dispatch:      # 允许手动触发
+  workflow_dispatch:
 
 jobs:
   run-script:
@@ -36,13 +36,25 @@ jobs:
 
       - name: Send All.txt to Telegram
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
         run: |
           FILE="All.txt"
-          NOW=$(date "+%Y-%m-%d %H:%M:%S")
-          # 使用 HTML 格式，换行可靠
-          MESSAGE="📢 <b>自动更新完成！</b><br>时间：$NOW<br>这里是最新的 All.txt 文件："
+          # 获取北京时间
+          NOW=$(TZ="Asia/Shanghai" date "+%Y-%m-%d %H:%M:%S")
+          
+          # 判断触发方式
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            TRIGGER="手动触发"
+          elif [ "$GITHUB_EVENT_NAME" = "schedule" ]; then
+            TRIGGER="定时触发"
+          else
+            TRIGGER="Push 触发"
+          fi
+
+          # HTML 格式消息
+          MESSAGE="📢 <b>自动更新完成！</b><br>触发方式：$TRIGGER<br>时间：$NOW<br>这里是最新的 All.txt 文件："
           
           # 发送文本消息
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
@@ -54,5 +66,4 @@ jobs:
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument" \
             -F chat_id="$TELEGRAM_CHAT_ID" \
             -F document=@"$FILE" \
-            -F caption="✅ 最新 All.txt 已自动更新！
-            时间：$NOW"
+            -F caption="✅ 最新 All.txt 文件已发送！时间：$NOW"
