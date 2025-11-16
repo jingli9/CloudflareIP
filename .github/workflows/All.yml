@@ -36,8 +36,8 @@ jobs:
 
       - name: Send All.txt to Telegram
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           GITHUB_EVENT_NAME: ${{ github.event_name }}
         run: |
           FILE="All.txt"
