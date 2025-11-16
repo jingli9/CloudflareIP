@@ -41,13 +41,12 @@ jobs:
         run: |
           FILE="All.txt"
           NOW=$(date "+%Y-%m-%d %H:%M:%S")
-          # 使用 MarkdownV2 格式换行
-          MESSAGE="📢 *自动更新完成！*\\n\\n时间：$NOW\\n这里是最新的 All.txt 文件："
+          MESSAGE="📢 <b>自动更新完成！</b><br>时间：$NOW<br>这里是最新的 All.txt 文件："
           
           # 发送文本消息
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
             -d chat_id="$TELEGRAM_CHAT_ID" \
-            -d parse_mode="MarkdownV2" \
+            -d parse_mode="HTML" \
             -d text="$MESSAGE"
 
           # 发送文件
