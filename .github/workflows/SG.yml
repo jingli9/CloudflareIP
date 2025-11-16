@@ -1,10 +1,9 @@
-name: SG
+name: SG  # 改成 All / US / SG / JP / DE / Me
 
 on:
-  push:
   schedule:
     - cron: '0 */8 * * *'  # 每8小时运行一次
-  workflow_dispatch:
+  workflow_dispatch:      # 允许手动触发
 
 jobs:
   run-script:
@@ -24,7 +23,7 @@ jobs:
 
       - name: Run script and save output
         run: |
-          python py/SG.py > SG.txt
+          python py/SG.py > SG.txt  # 改成对应文件
 
       - name: Commit and push result (force)
         run: |
@@ -47,23 +46,21 @@ jobs:
           # 判断触发方式
           if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
             TRIGGER="手动触发"
-          elif [ "$GITHUB_EVENT_NAME" = "schedule" ]; then
-            TRIGGER="定时触发"
           else
-            TRIGGER="Push 触发"
+            TRIGGER="定时触发"
           fi
 
-          # HTML 格式消息
-          MESSAGE="📢 <b>自动更新完成！</b><br>触发方式：$TRIGGER<br>时间：$NOW<br>这里是最新的 SG.txt 文件："
+          # HTML 格式消息（换行 + 粗体 + emoji）
+          MESSAGE="📢 <b>自动更新完成！</b><br>触发方式：$TRIGGER<br>时间：$NOW<br>这里是最新的 $FILE 文件："
 
-          # 使用 --data-urlencode 避免特殊字符破坏消息
+          # 正确发送 HTML 消息
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
-            --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" \
-            --data-urlencode "parse_mode=HTML" \
-            --data-urlencode "text=$MESSAGE"
+            -d chat_id="$TELEGRAM_CHAT_ID" \
+            -d parse_mode="HTML" \
+            -d text="$MESSAGE"
 
           # 发送文件
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument" \
             -F chat_id="$TELEGRAM_CHAT_ID" \
             -F document=@"$FILE" \
-            -F caption="✅ 最新 SG.txt 文件已发送！时间：$NOW"
+            -F caption="✅ 最新 $FILE 文件已发送！时间：$NOW"
