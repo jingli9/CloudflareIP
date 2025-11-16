@@ -4,7 +4,7 @@ on:
   push:              
   schedule:
     - cron: '0 */1 * * *'  # 每1小时运行一次
-  workflow_dispatch:      
+  workflow_dispatch:      # 允许手动触发
 
 jobs:
   run-script:
@@ -38,10 +38,10 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-     run: |
+        run: |
           FILE="All.txt"
           NOW=$(date "+%Y-%m-%d %H:%M:%S")
-          # 使用 MarkdownV2 并在换行处加上 \n
+          # 使用 MarkdownV2 格式换行
           MESSAGE="📢 *自动更新完成！*\\n\\n时间：$NOW\\n这里是最新的 All.txt 文件："
           
           # 发送文本消息
