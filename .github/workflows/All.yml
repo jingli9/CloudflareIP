@@ -1,10 +1,9 @@
-name: All
+name: All  # 改成 All / US / SG / JP / DE / Me
 
 on:
-  push:
   schedule:
     - cron: '0 */8 * * *'  # 每8小时运行一次
-  workflow_dispatch:
+  workflow_dispatch:      # 允许手动触发
 
 jobs:
   run-script:
@@ -24,7 +23,7 @@ jobs:
 
       - name: Run script and save output
         run: |
-          python py/All.py > All.txt
+          python py/All.py > All.txt  # 改成对应文件
 
       - name: Commit and push result (force)
         run: |
@@ -43,20 +42,18 @@ jobs:
           FILE="All.txt"
           # 获取北京时间
           NOW=$(TZ="Asia/Shanghai" date "+%Y-%m-%d %H:%M:%S")
-          
+
           # 判断触发方式
           if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
             TRIGGER="手动触发"
-          elif [ "$GITHUB_EVENT_NAME" = "schedule" ]; then
-            TRIGGER="定时触发"
           else
-            TRIGGER="Push 触发"
+            TRIGGER="定时触发"
           fi
 
-          # HTML 格式消息
-          MESSAGE="📢 <b>自动更新完成！</b><br>触发方式：$TRIGGER<br>时间：$NOW<br>这里是最新的 All.txt 文件："
-          
-          # 发送文本消息
+          # HTML 格式消息（换行 + 粗体 + emoji）
+          MESSAGE="📢 <b>自动更新完成！</b><br>触发方式：$TRIGGER<br>时间：$NOW<br>这里是最新的 $FILE 文件："
+
+          # 正确发送 HTML 消息
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
             -d chat_id="$TELEGRAM_CHAT_ID" \
             -d parse_mode="HTML" \
@@ -66,4 +63,4 @@ jobs:
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument" \
             -F chat_id="$TELEGRAM_CHAT_ID" \
             -F document=@"$FILE" \
-            -F caption="✅ 最新cloudflare All.txt 文件已更新！时间：$NOW"
+            -F caption="✅ 最新 $FILE 文件已发送！时间：$NOW"
