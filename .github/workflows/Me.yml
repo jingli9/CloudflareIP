@@ -1,4 +1,4 @@
-name: Me
+name: Me  # 改成 All / US / SG / JP / DE / Me
 
 on:
   schedule:
@@ -23,7 +23,7 @@ jobs:
 
       - name: Run script and save output
         run: |
-          python py/Me.py > Me.txt
+          python py/Me.py > Me.txt  # 改成对应文件
 
       - name: Commit and push result (force)
         run: |
@@ -50,17 +50,17 @@ jobs:
             TRIGGER="定时触发"
           fi
 
-          # HTML 格式消息
-          MESSAGE="📢 <b>自动更新完成！</b><br>触发方式：$TRIGGER<br>时间：$NOW<br>这里是最新的 Me.txt 文件："
+          # HTML 格式消息（换行 + 粗体 + emoji）
+          MESSAGE="📢 <b>自动更新完成！</b><br>触发方式：$TRIGGER<br>时间：$NOW<br>这里是最新的 $FILE 文件："
 
-          # 使用 --data-urlencode 避免特殊字符破坏消息
+          # 正确发送 HTML 消息
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
-            --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" \
-            --data-urlencode "parse_mode=HTML" \
-            --data-urlencode "text=$MESSAGE"
+            -d chat_id="$TELEGRAM_CHAT_ID" \
+            -d parse_mode="HTML" \
+            -d text="$MESSAGE"
 
           # 发送文件
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument" \
             -F chat_id="$TELEGRAM_CHAT_ID" \
             -F document=@"$FILE" \
-            -F caption="✅ 最新 Me.txt 文件已发送！时间：$NOW"
+            -F caption="✅ 最新 $FILE 文件已发送！时间：$NOW"
