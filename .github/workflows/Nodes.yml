@@ -1,9 +1,8 @@
 name: Nodes
 
 on:
-  push:              # 每次 push 时触发
   schedule:
-   - cron: '0 */1 * * *' # 每3小时运行一次
+    - cron: '0 */8 * * *'  # 每8小时运行一次
   workflow_dispatch:      # 允许手动触发
 
 jobs:
@@ -26,10 +25,38 @@ jobs:
         run: |
           python py/Nodes.py > Nodes.txt
 
-      - name: Commit result
+      - name: Commit and push result (force)
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add Nodes.txt
           git commit -m "Auto update Nodes.txt [skip ci]" || echo "No changes to commit"
-          git push
+          git push origin main --force
+
+      - name: Send Nodes.txt to Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+        run: |
+          FILE="Nodes.txt"
+          NOW=$(TZ="Asia/Shanghai" date "+%Y-%m-%d %H:%M:%S")
+
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            TRIGGER="手动触发"
+          else
+            TRIGGER="定时触发"
+          fi
+
+          MESSAGE="📢 <b>自动更新完成！</b><br>触发方式：$TRIGGER<br>时间：$NOW<br>这里是最新的 Nodes.txt 文件："
+
+          # JSON 方式发送 HTML 消息，保证标签生效
+          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d "{\"chat_id\": \"$TELEGRAM_CHAT_ID\", \"text\": \"$MESSAGE\", \"parse_mode\": \"HTML\"}"
+
+          # 发送文件
+          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument" \
+            -F chat_id="$TELEGRAM_CHAT_ID" \
+            -F document=@"$FILE" \
+            -F caption="✅ 最新 Nodes.txt 文件已发送！时间：$NOW"
