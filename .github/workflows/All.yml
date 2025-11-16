@@ -1,10 +1,10 @@
 name: All
 
 on:
-  push:              # 每次 push 时触发
+  push:              
   schedule:
-   - cron: '0 */1 * * *' # 每3小时运行一次
-  workflow_dispatch:      # 允许手动触发
+    - cron: '0 */1 * * *'  # 每1小时运行一次
+  workflow_dispatch:      
 
 jobs:
   run-script:
@@ -33,3 +33,25 @@ jobs:
           git add All.txt
           git commit -m "Auto update All.txt [skip ci]" || echo "No changes to commit"
           git push
+
+      - name: Send All.txt to Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+     run: |
+          FILE="All.txt"
+          NOW=$(date "+%Y-%m-%d %H:%M:%S")
+          # 使用 MarkdownV2 并在换行处加上 \n
+          MESSAGE="📢 *自动更新完成！*\\n\\n时间：$NOW\\n这里是最新的 All.txt 文件："
+          
+          # 发送文本消息
+          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+            -d chat_id="$TELEGRAM_CHAT_ID" \
+            -d parse_mode="MarkdownV2" \
+            -d text="$MESSAGE"
+
+          # 发送文件
+          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument" \
+            -F chat_id="$TELEGRAM_CHAT_ID" \
+            -F document=@"$FILE" \
+            -F caption="✅ 最新 All.txt 文件已发送！时间：$NOW"
